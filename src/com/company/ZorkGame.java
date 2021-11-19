@@ -1,126 +1,147 @@
 package com.company;
+
 import java.util.*;
+
 public class ZorkGame {
-
     public static void main(String[] args) {
-	// write your code here
-        MazeFactory factory = new MazeFactory();
+        // write your code here
         MazeGame game = new MazeGame();
-        game.createMaze(factory);
+        game.createMaze();
 
+        Scanner s = new Scanner(System.in);
+        String input = s.nextLine();
+        System.out.println(Arrays.toString(input.split(" ")));
     }
 }
-class MazeFactory{
-    public Maze makeMaze(){
-        return new Maze();
+//String: go north, walk north, pick key, take key, drink potion, read
+class Game{
+
+}
+class Parser {
+    private String input;
+
+    Parser(String input){
+        this.input = input.toLowerCase().trim();
     }
-    public Wall makeWall(){
-        return new Wall();
-    }
-    public Room makeRoom(){
-        return new Room();
-    }
-    public Door makeDoor(Room r1, Room r2){
-        return new Door(r1, r2);
+    public String[] parsing(){
+
+        String[] userInput = this.input.split(" ");
+        if(userInput.length > 2){
+            return null;
+        } else if (userInput.length == 2) {
+            ArrayList<String> actions = new ArrayList<>(Arrays.asList("go", "walk", "take", "see", "talk"));
+            ArrayList<String> objects = new ArrayList<>(Arrays.asList("north", "south", "west", "east", "box", "letter", "key","wallet", "money", "bush"));
+
+            if(!actions.contains(userInput[0])){
+                return null;
+            }
+            if(!objects.contains(userInput[1])){
+                return null;
+            }
+        }else if(userInput.length == 1){
+            if(!userInput[0].equals("pay")){
+                return null;
+            }
+        }
+        return userInput;
     }
 }
-abstract class MapSite{
-//    private String name;
-//    private String description;
-//
-//    public MapSite(String newName, String newDescription) {
-//        this.name = newName;
-//        this.description = newDescription;
-//    }
-//    public String getName() {return  name;}
-//    public void setName(String newName){ this.name = newName;}
-//
-//    public String getDescription() {return description; }
-//    public void setDescription(String newDescription){this.description = newDescription; }
-    abstract void enter();
+
+class Room {
+    private String roomName;
+    private String description;
+    private ArrayList<String> items;
+    private HashMap<String, Room>map = new HashMap<>();
+    //---------------------------------------
+    public void setMap(String direction, Room nextRoom) {
+
+        this.map.put(direction, nextRoom);
+    }
+
+    //---------------------------------------
+    public void showItem() {
+        //ToDo
+        System.out.println("item");
+    }
+
+    public String Pickup(String command) {
+        if (items.contains(command)) {
+            int index = items.indexOf(command);
+            return items.remove(index);
+        }else{
+            return "";
+        }
+    }
+
+    //---------------------------------------
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
+    }
+
+    //---------------------------------------
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    //---------------------------------------
+    //ToDo direction
 }
-enum Direction{
-    North, South, East, West
-}
-//player
 class Player{
+    private ArrayList<String> inventory;
+    private int health = 100;
 
+    public void setInventory(ArrayList<String> inventory) {
+        this.inventory = inventory;
+    }
+    public int getHealth() {
+        return health;
+    }
+    public void setHealth(int health) {
+        this.health = health;
+    }
 }
-//item
-class Item{
-
+class Wall{
+    private int wallNum;
+    private static int _wallCount = 1;
+    Wall(){
+        wallNum = _wallCount++;
+        System.out.println("this is the wall boy");
+    }
 }
-
-class Door extends MapSite{
-    private static int doorCount = 1;
-    private int doorNum;
+class Door {
     private Room room1;
     private Room room2;
-    Door(Room r1, Room r2){
-        doorNum = doorCount++;
-        System.out.println("creating a Door #" + doorNum + " between " + r1 + " and " + r2 );
-        room1 = r1;
-        room2 = r2;
+    private String direction;
+    private boolean key = false;
+    public Room openDoor(){
+        if(key){
+            if(this.direction.equals("east")){
+                return this.room2;
+            }else{
+                return this.room1;
+            }
+        }else{
+            if(this.direction.equals("east")){
+                return this.room1;
+            }else{
+                return this.room2;
+            }
+        }
     }
-    public String toString(){
-        return "Door #" + doorNum;
+    public void setKey(boolean key){
+        this.key = key;
     }
-    void enter(){}
-}
-class Wall extends MapSite{
-    private int wallNum;
-    private static int wallCount = 1;
-    Wall(){
-        wallNum = wallCount++;
-        System.out.println("creating Wall #" + wallNum);
-    }
-    void enter(){}
-}
-class Room extends MapSite{
-    private int roomNum;
-    private static int roomCount = 1;
-    private MapSite _north;
-    private MapSite _south;
-    private MapSite _east;
-    private MapSite _west;
-    Room(){
-        roomNum = roomCount++;
-        System.out.println("creating Room #" + roomNum);
+    Door(String direction){
+        this.direction = direction;
     }
 
-    public void setSide(Direction d, MapSite site){
-        switch(d){
-            case North:
-                _north = site;
-            case South:
-                _south =site;
-            case East:
-                _east = site;
-            case West:
-                _west = site;
-        }
-        System.out.println("setting " + d.toString() + "side of" + this.toString() + "to" + site.toString());
-    }
-    public MapSite getSide(Direction d){
-        MapSite result = null;
-        switch(d){
-            case North:
-                result = _north;
-            case South:
-                result = _south;
-            case East:
-                result = _east;
-            case West:
-                result = _west;
-        }
-        return result;
-    }
-    public String toString(){
-        return "room #" + roomNum;
-    }
-    void enter(){
-        System.out.println("enter to Room " + roomNum);
-    }
 }
 class Maze{
     private List<Room> roomList = new ArrayList<>();
@@ -132,51 +153,18 @@ class Maze{
             roomList.add(r);
         }
     }
-    Room getRoom(String room){
-        for(Room i : roomList){
-            if(i.toString().equalsIgnoreCase(room)){
-                return i;
-            }
-        }
-        return roomList.get(0);
-    }
 }
-//Maze
 class MazeGame{
-    public Maze createMaze(MazeFactory factory){
-        Maze aMaze = factory.makeMaze();
-        Room r1 = factory.makeRoom();
-        Room r2 = factory.makeRoom();
-        Room r3 = new Room1();
-        Door theDoor = factory.makeDoor(r1, r2);
-        aMaze.addRoom(r1);
-        aMaze.addRoom(r2);
-        aMaze.addRoom(r3);
-        r1.setSide(Direction.North, factory.makeWall());
-        r1.setSide(Direction.East, theDoor);
-        r1.setSide(Direction.South, factory.makeWall());
-        r1.setSide(Direction.West, factory.makeWall());
-        r2.setSide(Direction.North, factory.makeWall());
-        r2.setSide(Direction.East, factory.makeWall());
-        r2.setSide(Direction.South, factory.makeWall());
-        r2.setSide(Direction.West, theDoor);
-        r2.setSide(Direction.East, factory.makeDoor(r2,r3));
-        r3.setSide(Direction.North, factory.makeWall());
-        r3.setSide(Direction.East, factory.makeWall());
-        r3.setSide(Direction.South, factory.makeWall());
-        r3.setSide(Direction.West, factory.makeDoor(r2, r3));
+    public Maze createMaze(){
+        Maze aMaze = new Maze();
+        Room r1 = new Room();
+        r1.setRoomName("living room");
+        r1.setDescription("Inside the Living room");
+        Room r2 = new Room();
+        r2.setRoomName("bedroom");
+        r2.setDescription("Inside the bedroom");
+        r1.setMap("east", r2);
+        r2.setMap("west", r1);
         return aMaze;
     }
 }
-class Room1 extends Room{
-    Room1(){
-        super();
-    }
-    public String toString(){
-        return "room3" + super.toString();
-    }
-}
-//parsing
-
-
-//check command
